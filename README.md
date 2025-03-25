@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 1. Run the main application:
 ```bash
-python os2.py
+python Rag.py
 ```
 
 2. Using the Application:
@@ -48,7 +48,7 @@ python os2.py
 
 ## Project Structure
 
-- `os2.py` - Main application file containing the GUI and core functionality
+- `Rag.py` - Main application file containing the GUI and core functionality
 - `resource_allocation_graph.png` - Sample visualization output
 - `resource_allocation_report.pdf` - Documentation and analysis
 
