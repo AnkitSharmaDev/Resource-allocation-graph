@@ -1,0 +1,210 @@
+Resource Allocation Application Test Cases
+Basic Functionality Tests
+Scenario 1: Simple Resource Allocation
+
+Add Resources:
+
+Resource 1: "CPU" with 4 units
+Resource 2: "Memory" with 8 units
+Resource 3: "Disk" with 2 units
+
+
+Add Processes:
+
+Process 1: "Process-A"
+
+Allocate 2 CPU units
+Allocate 4 Memory units
+Allocate 1 Disk unit
+
+
+Process 2: "Process-B"
+
+Allocate 2 CPU units
+Allocate 3 Memory units
+Allocate 1 Disk unit
+
+
+
+
+
+Scenario 2: Resource Overallocation Test
+
+Add Resources:
+
+Resource 1: "CPU" with 4 units
+Resource 2: "Memory" with 8 units
+
+
+Add Processes:
+
+Process 1: "Heavy-Process"
+
+Try to allocate 5 CPU units (should trigger warning)
+Try to allocate 10 Memory units (should trigger warning)
+
+
+
+
+
+Scenario 3: Multiple Process Allocation
+
+Add Resources:
+
+Resource 1: "Network" with 6 units
+Resource 2: "GPU" with 2 units
+Resource 3: "RAM" with 16 units
+
+
+Add Processes:
+
+Process 1: "Video-Rendering"
+
+Allocate 1 Network unit
+Allocate 2 GPU units
+Allocate 8 RAM units
+
+
+Process 2: "Data-Processing"
+
+Allocate 2 Network units
+Allocate 1 GPU unit
+Allocate 6 RAM units
+
+
+Process 3: "Web-Server"
+
+Allocate 3 Network units
+Allocate 0 GPU units
+Allocate 2 RAM units
+
+
+
+
+
+Deadlock Detection Tests
+Scenario 4: Potential Deadlock Scenario
+
+Add Resources:
+
+Resource 1: "Printer" with 2 units
+Resource 2: "Scanner" with 1 unit
+
+
+Add Processes:
+
+Process 1: "DocumentA"
+
+Allocate 1 Printer unit
+Allocate 1 Scanner unit
+
+
+Process 2: "DocumentB"
+
+Allocate 1 Scanner unit
+Requesting 1 Printer unit
+
+
+
+
+
+Scenario 5: Complex Deadlock Detection
+
+Add Resources:
+
+Resource 1: "Database-Connection" with 3 units
+Resource 2: "External-API" with 2 units
+Resource 3: "Cache" with 4 units
+
+
+Add Processes:
+
+Process 1: "Transaction-Manager"
+
+Allocate 2 Database-Connection units
+Allocate 1 External-API unit
+Requesting 1 Cache unit
+
+
+Process 2: "Caching-Service"
+
+Allocate 2 Cache units
+Requesting 1 Database-Connection unit
+Requesting 1 External-API unit
+
+
+
+
+
+Edge Case Tests
+Scenario 6: Zero Resource Allocation
+
+Add Resources:
+
+Resource 1: "Temporary-Storage" with 5 units
+
+
+Add Processes:
+
+Process 1: "Idle-Process"
+
+Allocate 0 units to all resources
+
+
+
+
+
+Scenario 7: Maximum Resource Utilization
+
+Add Resources:
+
+Resource 1: "Processing-Power" with 10 units
+
+
+Add Multiple Processes:
+
+Process 1: "Background-Task" (5 units)
+Process 2: "Foreground-Task" (3 units)
+Process 3: "System-Maintenance" (2 units)
+
+
+
+Visualization Tests
+Scenario 8: Graph Generation
+
+You can generate graphs for each of the above scenarios
+Check that:
+
+Processes are represented in blue nodes
+Resources are represented in green square nodes
+Allocation edges are correctly drawn
+Labels are clear and readable
+
+
+
+Performance and Stress Test
+Scenario 9: Large Number of Resources and Processes
+
+Add Resources:
+
+20 different resource types
+Varying unit counts from 1 to 10
+
+
+Add Processes:
+
+50 different processes
+Random resource allocations
+Verify application stability and performance
+
+
+
+Error Handling Tests
+Scenario 10: Invalid Inputs
+
+Test inputs like:
+
+Negative resource counts
+Non-integer resource counts
+Empty resource or process names
+Attempting to allocate more resources than available
