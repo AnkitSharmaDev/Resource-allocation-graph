@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Resource Optimization - Resource Allocation Graph Simulator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 mb-3 fade-in">Resource Optimization</h1>
+            <p class="lead text-muted fade-in">AI-powered recommendations for optimizing your resource allocation strategy.</p>
+        </div>
+    </div>
+
+    {% if recommendations %}
+    <div class="row g-4">
+        <!-- Overview Card -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm fade-in">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-chart-line text-primary me-2"></i>System Overview
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon bg-primary bg-gradient text-white me-3">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Active Processes</h6>
+                                    <h4 class="mb-0">{{ recommendations.active_processes }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon bg-success bg-gradient text-white me-3">
+                                    <i class="fas fa-cube"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Resources</h6>
+                                    <h4 class="mb-0">{{ recommendations.total_resources }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon bg-warning bg-gradient text-white me-3">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Allocations</h6>
+                                    <h4 class="mb-0">{{ recommendations.total_allocations }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100 fade-in">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Optimization Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% if recommendations.suggestions %}
+                            {% for suggestion in recommendations.suggestions %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-{{ suggestion.type }} me-2">{{ suggestion.priority|upper }}</span>
+                                    <h6 class="mb-0">{{ suggestion.title }}</h6>
+                                </div>
+                                <p class="mb-1">{{ suggestion.message }}</p>
+                                <p class="mb-2 text-muted small">{{ suggestion.description }}</p>
+                                {% if suggestion.action %}
+                                <button class="btn btn-sm btn-outline-{{ suggestion.type }}">
+                                    <i class="fas fa-play me-1"></i>Apply
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                                <p>No optimization recommendations needed at this time.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Usage -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 fade-in">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-info me-2"></i>Resource Usage
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for resource_name, resource_data in recommendations.resource_usage.items() %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">{{ resource_name }}</h6>
+                            <span class="badge bg-{{ 'danger' if resource_data.usage_percentage > 90 else 'warning' if resource_data.usage_percentage > 70 else 'success' }}">
+                                {{ resource_data.usage_percentage }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-{{ 'danger' if resource_data.usage_percentage > 90 else 'warning' if resource_data.usage_percentage > 70 else 'success' }}"
+                                role="progressbar"
+                                style="width: {{ resource_data.usage_percentage }}%"
+                                aria-valuenow="{{ resource_data.usage_percentage }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {{ resource_data.allocated_units }}/{{ resource_data.total_units }} units allocated
+                            {% if resource_data.average_allocation_time > 0 %}
+                            <br>Average allocation time: {{ resource_data.average_allocation_time }}s
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis -->
+        <div class="col-md-12">
+            <div class="card shadow-sm fade-in">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line text-success me-2"></i>Resource Allocation Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-info fade-in" role="alert">
+                <i class="fas fa-info-circle me-2"></i>No optimization recommendations available at this time.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if recommendations and recommendations.trend_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const trendData = {{ recommendations.trend_data|tojson|safe }};
+        
+        if (ctx && trendData) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: trendData.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Resource Allocation Trends Over Time'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Allocation Events'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error initializing chart:', error);
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Resource Allocation Graph Simulator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 text-center">
+        <h1 class="display-4 mb-3">Resource Allocation Graph Simulator</h1>
+        <p class="lead">An interactive tool for exploring resource allocation and deadlock detection in operating systems</p>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow border-0">
+            <div class="card-body p-5">
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h2 class="h3 mb-3">Welcome to RAG Simulator</h2>
+                        <p>This simulator allows you to experiment with process resource allocation, visualize resource allocation graphs, and detect potential deadlocks in a system.</p>
+                        <p>Start by creating resources, then add processes and allocate resources to explore the dynamics of resource management in operating systems.</p>
+                        <div class="d-grid gap-2 d-md-block mt-4">
+                            <a href="{{ url_for('resources') }}" class="btn btn-primary">
+                                <i class="fas fa-cube me-2"></i>Manage Resources
+                            </a>
+                            <a href="{{ url_for('processes') }}" class="btn btn-success">
+                                <i class="fas fa-microchip me-2"></i>Manage Processes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img src="https://images.unsplash.com/photo-1639400200226-95739503acd1?auto=format&fit=crop&w=500&q=80" alt="Resource Allocation Visualization" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="h3 mb-4">Key Features</h2>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-3">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <h3 class="h5">Resource Management</h3>
+                <p>Create and manage multiple resources with configurable units to simulate real-world scenarios.</p>
+                <a href="{{ url_for('resources') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Resources
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="feature-icon bg-success bg-gradient text-white rounded-3 mb-3">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h3 class="h5">Interactive Visualization</h3>
+                <p>Visualize resource allocation with interactive graphs to understand the relationships between processes and resources.</p>
+                <a href="{{ url_for('graph') }}" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-arrow-right me-1"></i>View Graph
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="feature-icon bg-danger bg-gradient text-white rounded-3 mb-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="h5">Deadlock Detection</h3>
+                <p>Automatically detect potential deadlocks in your system using cycle detection algorithms.</p>
+                <a href="{{ url_for('deadlock') }}" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-arrow-right me-1"></i>Detect Deadlocks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h3 class="h5 mb-0"><i class="fas fa-lightbulb me-2"></i>AI-Powered Features</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="h6 mb-3"><i class="fas fa-chart-line text-primary me-2"></i>Resource Usage Analysis</h4>
+                        <p>Analyze resource allocation patterns using K-means clustering to identify common usage patterns.</p>
+                        <a href="{{ url_for('ai_analysis') }}" class="btn btn-sm btn-outline-primary mb-3">
+                            <i class="fas fa-arrow-right me-1"></i>View Analysis
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="h6 mb-3"><i class="fas fa-robot text-warning me-2"></i>Resource Optimization</h4>
+                        <p>Get AI-powered suggestions to optimize your resource allocation strategy and prevent deadlocks.</p>
+                        <a href="{{ url_for('resource_optimization') }}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-arrow-right me-1"></i>Get Recommendations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .feature-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.5rem;
+        border-radius: 0.5rem;
+    }
+</style>
+{% endblock %} 

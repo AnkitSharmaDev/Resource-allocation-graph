@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Graph Visualization{% endblock %}
+
+{% block head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/dist/dist/vis-network.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/dist/vis-network.min.js"></script>
+<style>
+    /* Override the base template completely */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        height: 100vh !important;
+        width: 100vw !important;
+        position: fixed !important;
+    }
+
+    /* Remove all base template elements */
+    header, footer, nav, .navbar, .footer, .container, .container-fluid {
+        display: none !important;
+    }
+
+    /* Make graph container take full space */
+    #graph {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 800px !important;
+        background: #fff !important;
+        z-index: 1 !important;
+    }
+
+    /* Force canvas to be full size */
+    canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 800px !important;
+    }
+
+    /* Controls floating on top */
+    .graph-header {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 1000 !important;
+        display: flex !important;
+        gap: 10px !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        padding: 8px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .btn {
+        padding: 8px 16px !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #fff !important;
+        color: #4a5568 !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        z-index: 1000 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="graph"></div>
+<div class="graph-header">
+    <button id="resetBtn" class="btn">Reset View</button>
+    <button id="refreshBtn" class="btn">Refresh</button>
+</div>
+
+<script>
+let network = null;
+
+const options = {
+    nodes: {
+        shape: 'dot',
+        size: 100,  // Much larger nodes
+        font: {
+            size: 28,  // Much larger font
+            color: '#ffffff',
+            face: 'Arial',
+            bold: true,
+            strokeWidth: 5,
+            strokeColor: 'rgba(0,0,0,0.2)'
+        },
+        borderWidth: 6,
+        shadow: {
+            enabled: true,
+            color: 'rgba(0,0,0,0.2)',
+            size: 20,
+            x: 5,
+            y: 5
+        }
+    },
+    edges: {
+        width: 8,  // Much thicker edges
+        length: 500,  // Much longer edges
+        shadow: {
+            enabled: true,
+            color: 'rgba(0,0,0,0.2)',
+            size: 20
+        },
+        arrows: {
+            to: {
+                enabled: true,
+                scaleFactor: 3,  // Much larger arrows
+                type: 'arrow'
+            }
+        },
+        smooth: {
+            type: 'curvedCW',
+            roundness: 0.3
+        }
+    },
+    physics: {
+        enabled: true,
+        barnesHut: {
+            gravitationalConstant: -15000,  // Extreme force
+            centralGravity: 0.05,  // Very low central gravity
+            springLength: 800,  // Very long springs
+            springConstant: 0.001,  // Very soft springs
+            damping: 0.09,
+            avoidOverlap: 1
+        },
+        stabilization: {
+            enabled: true,
+            iterations: 1000,
+            updateInterval: 50
+        }
+    },
+    interaction: {
+        hover: true,
+        tooltipDelay: 200,
+        zoomView: true,
+        dragView: true,
+        multiselect: true,
+        selectable: true,
+        selectConnectedEdges: true,
+        navigationButtons: true,
+        keyboard: true,
+        zoomSpeed: 0.5,  // Slower zoom for better control
+        dragNodes: true
+    }
+};
+
+function loadGraph() {
+    fetch('/api/graph-data')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading graph:', data.message);
+                return;
+            }
+
+            if (!data.nodes || !data.edges || data.nodes.length === 0) {
+                console.log('No graph data available');
+                return;
+            }
+
+            const nodes = new vis.DataSet(data.nodes.map(node => ({
+                ...node,
+                shape: node.type === 'process' ? 'box' : 'circle',
+                size: node.type === 'process' ? 100 : 100,  // Match the options size
+                color: {
+                    background: node.type === 'process' ? '#4e73df' : '#1cc88a',
+                    border: node.type === 'process' ? '#2e59d9' : '#13855c',
+                    highlight: { 
+                        background: node.type === 'process' ? '#2e59d9' : '#13855c',
+                        border: node.type === 'process' ? '#1e3d8f' : '#0f6848'
+                    }
+                }
+            })));
+
+            const edges = new vis.DataSet(data.edges.map(edge => ({
+                ...edge,
+                width: 8,  // Match the options width
+                length: 500,  // Match the options length
+                color: {
+                    color: edge.type === 'allocation' ? '#e74a3b' : '#f6c23e',
+                    highlight: edge.type === 'allocation' ? '#c52e1a' : '#dda20a'
+                }
+            })));
+
+            const container = document.getElementById('graph');
+            
+            if (network) {
+                network.setData({ nodes, edges });
+            } else {
+                network = new vis.Network(container, { nodes, edges }, options);
+                
+                network.on('stabilizationProgress', function(params) {
+                    console.log('Stabilization progress:', params.iterations / params.total * 100);
+                });
+
+                network.on('stabilizationIterationsDone', function() {
+                    console.log('Stabilization finished');
+                    network.fit({
+                        animation: {
+                            duration: 1000,
+                            easingFunction: 'easeInOutQuad'
+                        }
+                    });
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadGraph();
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (network) {
+            network.fit();
+        }
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadGraph);
+});
+
+// Auto-refresh every 5 seconds
+setInterval(loadGraph, 5000);
+</script>
+{% endblock %} 

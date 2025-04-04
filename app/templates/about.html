@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}About - Resource Allocation Graph Simulator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="h2 mb-3"><i class="fas fa-info-circle text-primary me-2"></i>About the Simulator</h1>
+        <p class="lead">Understanding resource allocation and deadlock detection in operating systems</p>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-3">What is a Resource Allocation Graph?</h2>
+                <p>
+                    A Resource Allocation Graph (RAG) is a directed graph used in operating systems to represent the current state of resource allocation among competing processes. It provides a visual way to analyze resource management and detect potential deadlocks.
+                </p>
+                
+                <p>The graph consists of two types of nodes:</p>
+                <ul>
+                    <li><strong>Process nodes:</strong> Representing processes in the system</li>
+                    <li><strong>Resource nodes:</strong> Representing resources that can be allocated</li>
+                </ul>
+                
+                <p>Edges in the graph represent two types of relationships:</p>
+                <ul>
+                    <li><strong>Request edge:</strong> A directed edge from a process to a resource, indicating that the process has requested but not yet been allocated the resource</li>
+                    <li><strong>Allocation edge:</strong> A directed edge from a resource to a process, indicating that the resource has been allocated to that process</li>
+                </ul>
+                
+                <div class="text-center my-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Deadlock-Example2.png/800px-Deadlock-Example2.png" alt="Resource Allocation Graph Example" class="img-fluid rounded" style="max-width: 500px;">
+                    <p class="text-muted mt-2 small">Example of a resource allocation graph showing a deadlock situation</p>
+                </div>
+                
+                <h2 class="h4 mb-3 mt-4">Deadlock Detection</h2>
+                <p>
+                    One of the primary uses of Resource Allocation Graphs is to detect deadlocks. A deadlock occurs when a cycle forms in the graph, indicating a circular wait condition where each process in the cycle is waiting for a resource held by another process in the cycle.
+                </p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Deadlock Conditions:</strong> For a deadlock to occur, four conditions must be present simultaneously: mutual exclusion, hold and wait, no preemption, and circular wait. The resource allocation graph helps identify the circular wait condition.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-book me-2"></i>Educational Purpose</h2>
+            </div>
+            <div class="card-body">
+                <p>This simulator is designed as an educational tool to help students and professionals understand:</p>
+                <ul>
+                    <li>How resource allocation works in operating systems</li>
+                    <li>The dynamics of process competition for limited resources</li>
+                    <li>Deadlock formation, detection, and prevention strategies</li>
+                    <li>Visualization of complex resource management scenarios</li>
+                </ul>
+                <p>The interactive nature of the simulator allows users to experiment with different allocation strategies and observe the results in real-time.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-brain me-2"></i>AI-Enhanced Features</h2>
+            </div>
+            <div class="card-body">
+                <p>Our simulator goes beyond traditional RAG visualizations by incorporating AI capabilities:</p>
+                <ul>
+                    <li><strong>Resource Usage Pattern Analysis:</strong> Uses clustering algorithms to identify patterns in resource allocation</li>
+                    <li><strong>Predictive Analytics:</strong> Helps anticipate potential deadlocks before they occur</li>
+                    <li><strong>Optimization Suggestions:</strong> AI-powered recommendations for better resource utilization</li>
+                    <li><strong>Deadlock Risk Assessment:</strong> Advanced algorithms to evaluate deadlock probability</li>
+                </ul>
+                <p>These AI features make the simulator not just an educational tool but also a practical resource for system design and optimization.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-code me-2"></i>Technical Implementation</h2>
+            </div>
+            <div class="card-body">
+                <p>This simulator is built using modern web technologies and algorithms:</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="h6 mb-2">Frontend Technologies</h3>
+                        <ul>
+                            <li>Flask web framework</li>
+                            <li>Bootstrap 5 for responsive design</li>
+                            <li>Vis.js for graph visualization</li>
+                            <li>Plotly.js for data visualization</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h6 mb-2">Backend Algorithms</h3>
+                        <ul>
+                            <li>NetworkX for graph operations</li>
+                            <li>Cycle detection algorithms for deadlock identification</li>
+                            <li>K-means clustering for pattern recognition</li>
+                            <li>Resource utilization optimization algorithms</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-secondary mt-3">
+                    <i class="fas fa-github me-2"></i>
+                    <strong>Open Source:</strong> This project embraces open-source principles and welcomes contributions from the community to enhance its capabilities.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

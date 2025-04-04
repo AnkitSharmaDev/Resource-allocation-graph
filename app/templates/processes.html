@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Processes - Resource Allocation Graph Simulator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .process-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    
+    .resource-input {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .resource-input:focus {
+        transform: scale(1.02);
+    }
+    
+    .btn-modern {
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-modern:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255,255,255,.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%);
+        transform-origin: 50% 50%;
+    }
+    
+    .btn-modern:hover {
+        transform: scale(1.02);
+    }
+    
+    .btn-modern:focus:not(:active)::after {
+        animation: ripple 1s ease-out;
+    }
+    
+    @keyframes ripple {
+        0% {
+            transform: scale(0, 0);
+            opacity: 0.5;
+        }
+        100% {
+            transform: scale(100, 100);
+            opacity: 0;
+        }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Add Process Section -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Process
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('add_process') }}" method="POST" id="processForm">
+                        <div class="mb-3">
+                            <label for="process_name" class="form-label">Process Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-microchip"></i></span>
+                                <input type="text" class="form-control" id="process_name" name="process_name" required
+                                    pattern="[A-Za-z0-9_-]+" title="Only letters, numbers, hyphens, and underscores allowed">
+                            </div>
+                            <div class="form-text">Use letters, numbers, hyphens, and underscores only.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Create Process
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processes List Section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2"></i>Active Processes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if processes %}
+                        <div class="row">
+                            {% for process in processes %}
+                                <div class="col-md-12 mb-4">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-microchip me-2"></i>{{ process.name }}
+                                            </h6>
+                                            <div>
+                                                <small class="text-muted me-2">ID: {{ process.id }}</small>
+                                                <form action="{{ url_for('remove_process', process_id=process.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                                            onclick="return confirm('Are you sure you want to delete this process? This will release all allocated resources.')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Resource Allocation Form -->
+                                            <form action="{{ url_for('allocate_resource', process_id=process.id) }}" method="POST" class="mb-3 resource-form">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Allocate Resource</label>
+                                                    <div class="input-group">
+                                                        <select name="resource_id" class="form-select" required>
+                                                            <option value="">Select Resource</option>
+                                                            {% for resource in available_resources %}
+                                                                <option value="{{ resource.id }}" data-available="{{ resource.available_units }}">
+                                                                    {{ resource.name }} ({{ resource.available_units }} units available)
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <input type="number" name="units" class="form-control" value="1" min="1" required>
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-text">Select a resource and specify units to allocate.</div>
+                                                </div>
+                                            </form>
+
+                                            <!-- Allocated Resources -->
+                                            {% if process.allocated_resources %}
+                                                <div class="mb-3">
+                                                    <h6 class="mb-2">Allocated Resources:</h6>
+                                                    <div class="list-group">
+                                                        {% for resource_id, units in process.allocated_resources.items() %}
+                                                            {% for resource in available_resources %}
+                                                                {% if resource.id == resource_id %}
+                                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                        <span>
+                                                                            <i class="fas fa-cube me-2"></i>{{ resource.name }}
+                                                                        </span>
+                                                                        <span class="badge bg-primary">{{ units }} units</span>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+
+                                            <!-- Requested Resources -->
+                                            {% if process.requested_resources %}
+                                                <div>
+                                                    <h6 class="mb-2">Requested Resources:</h6>
+                                                    <div class="list-group">
+                                                        {% for resource_id, units in process.requested_resources.items() %}
+                                                            {% for resource in available_resources %}
+                                                                {% if resource.id == resource_id %}
+                                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                        <span>
+                                                                            <i class="fas fa-clock me-2"></i>{{ resource.name }}
+                                                                        </span>
+                                                                        <span class="badge bg-warning">{{ units }} units</span>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>No processes available. Create a new process to get started.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Process form validation
+    const processForm = document.getElementById('processForm');
+    if (processForm) {
+        processForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const processName = document.getElementById('process_name').value.trim();
+            
+            if (!processName) {
+                alert('Please enter a process name');
+                return;
+            }
+            
+            if (!/^[A-Za-z0-9_-]+$/.test(processName)) {
+                alert('Process name can only contain letters, numbers, hyphens, and underscores');
+                return;
+            }
+            
+            this.submit();
+        });
+    }
+
+    // Resource allocation form validation
+    const resourceForms = document.querySelectorAll('.resource-form');
+    resourceForms.forEach(form => {
+        const resourceSelect = form.querySelector('select[name="resource_id"]');
+        const unitsInput = form.querySelector('input[name="units"]');
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            if (!resourceSelect.value) {
+                alert('Please select a resource');
+                return;
+            }
+            
+            const units = parseInt(unitsInput.value);
+            if (isNaN(units) || units < 1) {
+                alert('Please enter a valid number of units (minimum 1)');
+                return;
+            }
+            
+            const selectedOption = resourceSelect.options[resourceSelect.selectedIndex];
+            const availableUnits = parseInt(selectedOption.dataset.available);
+            
+            if (units > availableUnits) {
+                alert(`Maximum available units is ${availableUnits}`);
+                return;
+            }
+            
+            this.submit();
+        });
+        
+        // Update units input max value when resource is selected
+        resourceSelect.addEventListener('change', function() {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                const availableUnits = parseInt(selectedOption.dataset.available);
+                unitsInput.max = availableUnits;
+                unitsInput.title = `Maximum ${availableUnits} units available`;
+                
+                if (parseInt(unitsInput.value) > availableUnits) {
+                    unitsInput.value = 1;
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

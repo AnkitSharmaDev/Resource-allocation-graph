@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Resource Optimization - RAG Simulator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="h2 mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Resource Optimization</h1>
+        <p class="lead">AI-powered suggestions to optimize your resource allocation strategy</p>
+    </div>
+</div>
+
+<div class="row">
+    {% if optimization_data and optimization_data.has_suggestions %}
+    <!-- AI has suggestions -->
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h2 class="h5 mb-0"><i class="fas fa-lightbulb me-2"></i>Optimization Suggestions</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>AI Analysis Complete:</strong> {{ optimization_data.message }}
+                </div>
+                
+                <h3 class="h6 mb-3 mt-4">Recommended Actions:</h3>
+                
+                <div class="list-group mb-4">
+                    {% for suggestion in optimization_data.suggestions %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                {% if suggestion.type == 'underutilized' %}
+                                <i class="fas fa-battery-quarter text-warning me-2"></i>Underutilized Resources
+                                {% elif suggestion.type == 'overutilized' %}
+                                <i class="fas fa-battery-full text-danger me-2"></i>Overutilized Resources
+                                {% elif suggestion.type == 'deadlock' %}
+                                <i class="fas fa-exclamation-triangle text-danger me-2"></i>Deadlock Risk
+                                {% elif suggestion.type == 'resource_hoarding' %}
+                                <i class="fas fa-hdd text-primary me-2"></i>Resource Hoarding
+                                {% else %}
+                                <i class="fas fa-lightbulb text-info me-2"></i>General Suggestion
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">AI Recommendation</small>
+                        </div>
+                        <p class="mb-1">{{ suggestion.message }}</p>
+                        <small class="text-muted">
+                            {% if suggestion.type == 'underutilized' %}
+                            Consider reducing allocation or repurposing these resources.
+                            {% elif suggestion.type == 'overutilized' %}
+                            Resource contention may lead to performance bottlenecks.
+                            {% elif suggestion.type == 'deadlock' %}
+                            Review your allocation strategy to prevent deadlocks.
+                            {% elif suggestion.type == 'resource_hoarding' %}
+                            Encourage processes to release resources when not in use.
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        {% if optimization_data.resource_utilization %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-chart-bar me-2"></i>Resource Utilization Analysis</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Total Units</th>
+                                <th>Used Units</th>
+                                <th>Free Units</th>
+                                <th>Utilization</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resource, data in optimization_data.resource_utilization.items() %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-cube me-2 text-primary"></i>
+                                    <strong>{{ resource }}</strong>
+                                </td>
+                                <td>{{ data.total }}</td>
+                                <td>{{ data.used }}</td>
+                                <td>{{ data.free }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar 
+                                            {% if data.utilization > 0.8 %}
+                                                bg-danger
+                                            {% elif data.utilization > 0.5 %}
+                                                bg-success
+                                            {% else %}
+                                                bg-warning
+                                            {% endif %}"
+                                            role="progressbar" 
+                                            style="width: {{ data.utilization * 100 }}%"
+                                            aria-valuenow="{{ data.utilization * 100 }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {{ (data.utilization * 100)|round(1) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if data.utilization > 0.8 %}
+                                    <span class="badge bg-danger">High</span>
+                                    {% elif data.utilization > 0.5 %}
+                                    <span class="badge bg-success">Optimal</span>
+                                    {% elif data.utilization > 0.3 %}
+                                    <span class="badge bg-info">Moderate</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Low</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="utilization-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-brain me-2"></i>AI Technology</h2>
+            </div>
+            <div class="card-body">
+                <p>
+                    Our AI optimization engine analyzes your resource allocation patterns and provides targeted suggestions to:
+                </p>
+                <ul>
+                    <li><strong>Improve resource utilization</strong></li>
+                    <li><strong>Prevent potential deadlocks</strong></li>
+                    <li><strong>Identify inefficient allocation patterns</strong></li>
+                    <li><strong>Optimize overall system performance</strong></li>
+                </ul>
+                
+                <div class="alert alert-secondary mt-3">
+                    <i class="fas fa-code me-2"></i>
+                    <strong>How it works:</strong> The AI engine analyzes allocation matrices, request patterns, and resource utilization to generate intelligent optimization suggestions based on best practices and learned patterns.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h2 class="h5 mb-0"><i class="fas fa-check-circle me-2"></i>Benefits</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-tachometer-alt fa-2x text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="h6 mb-0">Improved Performance</h3>
+                        <p class="small text-muted mb-0">Optimize resource allocation for better system performance</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-shield-alt fa-2x text-success"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="h6 mb-0">Deadlock Prevention</h3>
+                        <p class="small text-muted mb-0">Identify and resolve potential deadlock situations</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-balance-scale fa-2x text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="h6 mb-0">Balanced Utilization</h3>
+                        <p class="small text-muted mb-0">Ensure resources are utilized efficiently</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-lightbulb fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="h6 mb-0">Intelligent Insights</h3>
+                        <p class="small text-muted mb-0">Gain insights that might not be obvious through manual analysis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif not ADVANCED_FEATURES %}
+    <!-- Advanced features disabled -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Advanced Features Disabled:</strong> Some dependencies are missing. To enable AI optimization features, please install the required packages.
+                </div>
+                <p>Required packages for AI features:</p>
+                <ul>
+                    <li>scikit-learn</li>
+                    <li>numpy</li>
+                    <li>pandas</li>
+                    <li>plotly</li>
+                </ul>
+                <p>Install them using pip:</p>
+                <pre><code>pip install scikit-learn numpy pandas plotly</code></pre>
+                <div class="text-center mt-4 mb-3">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded" alt="AI Illustration" style="max-height: 300px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No suggestions -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>No optimization suggestions available:</strong> {{ optimization_data.message }}
+                </div>
+                <p>To get AI-powered optimization suggestions:</p>
+                <ol>
+                    <li>Add more resources to your simulation</li>
+                    <li>Create processes and allocate resources to them</li>
+                    <li>Create more varied allocation patterns</li>
+                </ol>
+                <div class="text-center mt-4 mb-3">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded" alt="AI Illustration" style="max-height: 300px;">
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('resources') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Add Resources
+                    </a>
+                    <a href="{{ url_for('processes') }}" class="btn btn-success">
+                        <i class="fas fa-microchip me-2"></i>Manage Processes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if optimization_data and optimization_data.resource_utilization %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prepare data for utilization chart
+        const resources = [];
+        const utilization = [];
+        const colors = [];
+        
+        {% for resource, data in optimization_data.resource_utilization.items() %}
+        resources.push("{{ resource }}");
+        utilization.push({{ data.utilization }});
+        
+        if ({{ data.utilization }} > 0.8) {
+            colors.push('#dc3545'); // danger
+        } else if ({{ data.utilization }} > 0.5) {
+            colors.push('#28a745'); // success
+        } else if ({{ data.utilization }} > 0.3) {
+            colors.push('#17a2b8'); // info
+        } else {
+            colors.push('#ffc107'); // warning
+        }
+        {% endfor %}
+        
+        // Create utilization chart
+        const utilizationData = [{
+            x: resources,
+            y: utilization.map(val => val * 100), // Convert to percentage
+            type: 'bar',
+            marker: {
+                color: colors
+            }
+        }];
+        
+        const utilizationLayout = {
+            title: 'Resource Utilization (%)',
+            xaxis: {
+                title: 'Resources'
+            },
+            yaxis: {
+                title: 'Utilization (%)',
+                range: [0, 100]
+            }
+        };
+        
+        Plotly.newPlot('utilization-chart', utilizationData, utilizationLayout);
+    });
+</script>
+{% endif %}
+{% endblock %} 

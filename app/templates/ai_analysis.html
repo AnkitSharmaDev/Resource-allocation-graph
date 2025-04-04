@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}AI Analysis - Resource Allocation Graph Simulator{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h2 mb-3">
+                <i class="fas fa-brain text-primary me-2"></i>AI Resource Usage Analysis
+            </h1>
+            <p class="lead">Advanced analysis of resource allocation patterns and usage trends</p>
+        </div>
+    </div>
+
+    {% if analysis and not analysis.get('error') %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>Resource Usage Overview
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="resourceUsageChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="allocationTrendChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-table me-2"></i>Detailed Resource Analysis
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Usage %</th>
+                                        <th>Current Usage</th>
+                                        <th>Total Units</th>
+                                        <th>Allocation Count</th>
+                                        <th>Avg. Allocation Time</th>
+                                        <th>Pattern</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for resource_name, data in analysis.resource_usage.items() %}
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-cube text-primary me-2"></i>
+                                                {{ resource_name }}
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar {% if data.usage_percentage > 90 %}bg-danger{% elif data.usage_percentage > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                                         role="progressbar"
+                                                         style="width: {{ data.usage_percentage }}%"
+                                                         aria-valuenow="{{ data.usage_percentage }}"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100">
+                                                        {{ "%.1f"|format(data.usage_percentage) }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ data.current_usage }}</td>
+                                            <td>{{ data.total_units }}</td>
+                                            <td>{{ data.allocation_count }}</td>
+                                            <td>{{ "%.1f"|format(data.average_allocation_time) }}s</td>
+                                            <td>
+                                                {% if data.usage_pattern %}
+                                                    <span class="badge bg-info">{{ data.usage_pattern }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">No pattern</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Activity Summary
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h3 class="h2 mb-0">{{ analysis.total_allocations }}</h3>
+                                <p class="text-muted">Total Allocations</p>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="h2 mb-0">{{ analysis.total_requests }}</h3>
+                                <p class="text-muted">Total Requests</p>
+                            </div>
+                        </div>
+                        <p class="text-center text-muted mt-3">
+                            <small>Last updated: {{ analysis.timestamp }}</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Key Insights
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            {% set high_usage = namespace(count=0) %}
+                            {% set low_usage = namespace(count=0) %}
+                            {% for resource_name, data in analysis.resource_usage.items() %}
+                                {% if data.usage_percentage > 90 %}
+                                    {% set high_usage.count = high_usage.count + 1 %}
+                                {% elif data.usage_percentage < 10 %}
+                                    {% set low_usage.count = low_usage.count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if high_usage.count > 0 %}
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                    {{ high_usage.count }} resource(s) showing high usage (>90%)
+                                </li>
+                            {% endif %}
+                            
+                            {% if low_usage.count > 0 %}
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-warning me-2"></i>
+                                    {{ low_usage.count }} resource(s) showing low usage (<10%)
+                                </li>
+                            {% endif %}
+                            
+                            <li>
+                                <i class="fas fa-chart-bar text-info me-2"></i>
+                                Average allocation time: 
+                                {{ "%.1f"|format(analysis.resource_usage.values()|map(attribute='average_allocation_time')|list|sum / analysis.resource_usage|length) }}s
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        {% if analysis and analysis.get('error') %}
+                            <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                            <h3 class="h5">Error Performing Analysis</h3>
+                            <p class="text-muted">{{ analysis.error }}</p>
+                        {% else %}
+                            <i class="fas fa-chart-bar text-muted fa-3x mb-3"></i>
+                            <h3 class="h5">No Data Available for Analysis</h3>
+                            <p class="text-muted">Start by adding resources and processes to get AI-powered analysis.</p>
+                            <div class="mt-3">
+                                <a href="{{ url_for('resources') }}" class="btn btn-primary me-2">
+                                    <i class="fas fa-cube me-2"></i>Add Resources
+                                </a>
+                                <a href="{{ url_for('processes') }}" class="btn btn-success">
+                                    <i class="fas fa-microchip me-2"></i>Add Processes
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if analysis and not analysis.get('error') %}
+        // Resource Usage Chart
+        const resourceLabels = [];
+        const resourceData = [];
+        const backgroundColors = [];
+        
+        {% for resource_name, data in analysis.resource_usage.items() %}
+            resourceLabels.push("{{ resource_name }}");
+            resourceData.push({{ data.usage_percentage }});
+            
+            // Color based on usage percentage
+            if ({{ data.usage_percentage }} > 90) {
+                backgroundColors.push('rgba(220, 53, 69, 0.7)'); // danger
+            } else if ({{ data.usage_percentage }} > 70) {
+                backgroundColors.push('rgba(255, 193, 7, 0.7)'); // warning
+            } else {
+                backgroundColors.push('rgba(40, 167, 69, 0.7)'); // success
+            }
+        {% endfor %}
+        
+        new Chart(document.getElementById('resourceUsageChart'), {
+            type: 'bar',
+            data: {
+                labels: resourceLabels,
+                datasets: [{
+                    label: 'Resource Usage (%)',
+                    data: resourceData,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Usage Percentage'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Resources'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Resource Usage Overview'
+                    }
+                }
+            }
+        });
+        
+        // Allocation Trend Chart
+        const trendData = {{ analysis.allocation_trend|tojson }};
+        
+        new Chart(document.getElementById('allocationTrendChart'), {
+            type: 'line',
+            data: {
+                labels: trendData.timestamps,
+                datasets: [{
+                    label: 'Active Allocations',
+                    data: trendData.allocations,
+                    borderColor: 'rgba(13, 110, 253, 0.7)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Active Allocations'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Resource Allocation Trends'
+                    }
+                }
+            }
+        });
+    {% endif %}
+});
+</script>
+{% endblock %} 
