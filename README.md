@@ -296,13 +296,13 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## About the Developer
 
-**Ankit Sharma** is a passionate software developer with expertise in operating systems and resource management. With a strong foundation in computer science and system design, he developed this Resource Allocation Graph Simulator to help students and professionals understand complex resource management concepts through interactive visualization and AI-powered analysis.
+Hey I'm **Ankit** a passionate developer. With a strong foundation in computer science and system design,I developed this Resource Allocation Graph Simulator to help students and professionals understand complex resource management concepts through interactive visualization and AI-powered analysis.
 
 ### Contact
 - GitHub: [AnkitSharmaDev](https://github.com/AnkitSharmaDev)
-- LinkedIn: [Ankit Sharma](https://www.linkedin.com/in/ankit-sharma-dev)
-- Email: [your.email@example.com]
+- LinkedIn: [Ankit Sharma](https://www.linkedin.com/in/ankitsharama/)
+- Email: [ankitsharma64604@gmail.com]
 
 ---
 
-© 2024 Ankit Sharma. All Rights Reserved.
+© 2025 Ankit Sharma. All Rights Reserved.
