@@ -130,26 +130,54 @@
                                         </div>
                                         <div class="card-body">
                                             <!-- Resource Allocation Form -->
-                                            <form action="{{ url_for('allocate_resource', process_id=process.id) }}" method="POST" class="mb-3 resource-form">
-                                                <div class="mb-2">
-                                                    <label class="form-label">Allocate Resource</label>
-                                                    <div class="input-group">
-                                                        <select name="resource_id" class="form-select" required>
-                                                            <option value="">Select Resource</option>
-                                                            {% for resource in available_resources %}
-                                                                <option value="{{ resource.id }}" data-available="{{ resource.available_units }}">
-                                                                    {{ resource.name }} ({{ resource.available_units }} units available)
-                                                                </option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <input type="number" name="units" class="form-control" value="1" min="1" required>
-                                                        <button type="submit" class="btn btn-success">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                    <div class="form-text">Select a resource and specify units to allocate.</div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <form action="{{ url_for('allocate_resource', process_id=process.id) }}" method="POST" class="mb-3 resource-form">
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Allocate Resource</label>
+                                                            <div class="input-group">
+                                                                <select name="resource_id" class="form-select" required>
+                                                                    <option value="">Select Resource</option>
+                                                                    {% for resource in available_resources %}
+                                                                        <option value="{{ resource.id }}" data-available="{{ resource.available_units }}">
+                                                                            {{ resource.name }} ({{ resource.available_units }} units available)
+                                                                        </option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                                <input type="number" name="units" class="form-control" value="1" min="1" required>
+                                                                <button type="submit" class="btn btn-success">
+                                                                    <i class="fas fa-plus"></i> Allocate
+                                                                </button>
+                                                            </div>
+                                                            <div class="form-text">Select a resource and specify units to allocate.</div>
+                                                        </div>
+                                                    </form>
                                                 </div>
-                                            </form>
+
+                                                <!-- Resource Request Form -->
+                                                <div class="col-md-6">
+                                                    <form action="{{ url_for('request_resource', process_id=process.id) }}" method="POST" class="mb-3 resource-form">
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Request Resource</label>
+                                                            <div class="input-group">
+                                                                <select name="resource_id" class="form-select" required>
+                                                                    <option value="">Select Resource</option>
+                                                                    {% for resource in available_resources %}
+                                                                        <option value="{{ resource.id }}" data-total="{{ resource.total_units }}">
+                                                                            {{ resource.name }} ({{ resource.total_units }} total units)
+                                                                        </option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                                <input type="number" name="units" class="form-control" value="1" min="1" required>
+                                                                <button type="submit" class="btn btn-warning">
+                                                                    <i class="fas fa-clock"></i> Request
+                                                                </button>
+                                                            </div>
+                                                            <div class="form-text">Select a resource and specify units to request.</div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
 
                                             <!-- Allocated Resources -->
                                             {% if process.allocated_resources %}
@@ -174,17 +202,24 @@
 
                                             <!-- Requested Resources -->
                                             {% if process.requested_resources %}
-                                                <div>
-                                                    <h6 class="mb-2">Requested Resources:</h6>
+                                                <div class="mb-3">
+                                                    <h6 class="mb-2">
+                                                        <i class="fas fa-clock me-2"></i>Requested Resources:
+                                                    </h6>
                                                     <div class="list-group">
                                                         {% for resource_id, units in process.requested_resources.items() %}
                                                             {% for resource in available_resources %}
                                                                 {% if resource.id == resource_id %}
                                                                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                                        <span>
-                                                                            <i class="fas fa-clock me-2"></i>{{ resource.name }}
-                                                                        </span>
-                                                                        <span class="badge bg-warning">{{ units }} units</span>
+                                                                        <div>
+                                                                            <span class="me-2">{{ resource.name }}</span>
+                                                                            <span class="badge bg-warning">{{ units }} units</span>
+                                                                        </div>
+                                                                        <form action="{{ url_for('cancel_request', process_id=process.id, resource_id=resource.id) }}" method="POST" class="d-inline">
+                                                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Cancel Request">
+                                                                                <i class="fas fa-times"></i>
+                                                                            </button>
+                                                                        </form>
                                                                     </div>
                                                                 {% endif %}
                                                             {% endfor %}
@@ -233,11 +268,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Resource allocation form validation
+    // Resource forms validation (both allocation and request)
     const resourceForms = document.querySelectorAll('.resource-form');
     resourceForms.forEach(form => {
         const resourceSelect = form.querySelector('select[name="resource_id"]');
         const unitsInput = form.querySelector('input[name="units"]');
+        const isAllocationForm = form.action.includes('allocate_resource');
         
         form.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -254,11 +290,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const selectedOption = resourceSelect.options[resourceSelect.selectedIndex];
-            const availableUnits = parseInt(selectedOption.dataset.available);
-            
-            if (units > availableUnits) {
-                alert(`Maximum available units is ${availableUnits}`);
-                return;
+            if (isAllocationForm) {
+                const availableUnits = parseInt(selectedOption.dataset.available);
+                if (units > availableUnits) {
+                    alert(`Cannot allocate more than ${availableUnits} available units`);
+                    return;
+                }
+            } else {
+                const totalUnits = parseInt(selectedOption.dataset.total);
+                if (units > totalUnits) {
+                    alert(`Cannot request more than ${totalUnits} total units`);
+                    return;
+                }
             }
             
             this.submit();
@@ -268,11 +311,14 @@ document.addEventListener('DOMContentLoaded', function() {
         resourceSelect.addEventListener('change', function() {
             if (this.value) {
                 const selectedOption = this.options[this.selectedIndex];
-                const availableUnits = parseInt(selectedOption.dataset.available);
-                unitsInput.max = availableUnits;
-                unitsInput.title = `Maximum ${availableUnits} units available`;
+                const maxUnits = isAllocationForm ? 
+                    parseInt(selectedOption.dataset.available) : 
+                    parseInt(selectedOption.dataset.total);
                 
-                if (parseInt(unitsInput.value) > availableUnits) {
+                unitsInput.max = maxUnits;
+                unitsInput.title = `Maximum ${maxUnits} units ${isAllocationForm ? 'available' : 'total'}`;
+                
+                if (parseInt(unitsInput.value) > maxUnits) {
                     unitsInput.value = 1;
                 }
             }

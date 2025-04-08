@@ -1,78 +1,130 @@
 {% extends "base.html" %}
-{% block title %}Graph Visualization{% endblock %}
+{% block title %}Resource Allocation Graph{% endblock %}
 
 {% block head %}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/dist/dist/vis-network.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/dist/vis-network.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/font/lucide.min.css" rel="stylesheet">
 <style>
-    /* Override the base template completely */
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-        height: 100vh !important;
-        width: 100vw !important;
-        position: fixed !important;
+    /* Reset and base styles */
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
     }
 
-    /* Remove all base template elements */
-    header, footer, nav, .navbar, .footer, .container, .container-fluid {
+    nav.navbar, footer {
         display: none !important;
     }
 
-    /* Make graph container take full space */
+    /* Main layout */
+    .app-container {
+        height: 100vh;
+        background: #0f172a;
+        position: relative;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        padding: 1rem;
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 0.5rem;
+        position: absolute;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 12px;
+        z-index: 10;
+    }
+
+    /* Graph container */
+    #graph-container {
+        width: 100%;
+        height: 100vh;
+        position: relative;
+        background: #0f172a;
+    }
+
     #graph {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        min-height: 800px !important;
-        background: #fff !important;
-        z-index: 1 !important;
+        width: 100%;
+        height: 100%;
     }
 
-    /* Force canvas to be full size */
-    canvas {
-        width: 100vw !important;
-        height: 100vh !important;
-        min-height: 800px !important;
-    }
-
-    /* Controls floating on top */
-    .graph-header {
-        position: fixed !important;
-        top: 20px !important;
-        right: 20px !important;
-        z-index: 1000 !important;
-        display: flex !important;
-        gap: 10px !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-        padding: 8px !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    }
-
+    /* Buttons */
     .btn {
-        padding: 8px 16px !important;
-        border-radius: 6px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #fff !important;
-        color: #4a5568 !important;
-        font-weight: 500 !important;
-        cursor: pointer !important;
-        z-index: 1000 !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        background: rgba(30, 41, 59, 0.8);
+    }
+
+    .btn:hover {
+        background: rgba(51, 65, 85, 0.8);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn i {
+        font-size: 1rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="graph"></div>
-<div class="graph-header">
-    <button id="resetBtn" class="btn">Reset View</button>
-    <button id="refreshBtn" class="btn">Refresh</button>
+<div class="app-container">
+    <!-- Toolbar -->
+    <div class="toolbar fade-in">
+        <button class="btn" id="zoomInBtn">
+            <i class="lucide-zoom-in"></i>
+            Zoom In
+        </button>
+        <button class="btn" id="zoomOutBtn">
+            <i class="lucide-zoom-out"></i>
+            Zoom Out
+        </button>
+        <button class="btn" id="centerBtn">
+            <i class="lucide-maximize-2"></i>
+            Center
+        </button>
+        <button class="btn" id="refreshBtn">
+            <i class="lucide-refresh-cw"></i>
+            Refresh
+        </button>
+        <button class="btn" id="resetBtn">
+            <i class="lucide-rotate-ccw"></i>
+            Reset
+        </button>
+        <button class="btn" id="fullscreenBtn">
+            <i class="lucide-maximize"></i>
+            Fullscreen
+        </button>
+    </div>
+
+    <!-- Graph -->
+    <div id="graph-container">
+        <div id="graph"></div>
+    </div>
 </div>
 
 <script>
@@ -80,59 +132,83 @@ let network = null;
 
 const options = {
     nodes: {
-        shape: 'dot',
-        size: 100,  // Much larger nodes
+        shape: 'box',
+        size: 40,
         font: {
-            size: 28,  // Much larger font
-            color: '#ffffff',
-            face: 'Arial',
-            bold: true,
-            strokeWidth: 5,
-            strokeColor: 'rgba(0,0,0,0.2)'
+            size: 16,
+            color: '#e2e8f0',
+            face: 'system-ui, sans-serif',
+            bold: true
         },
-        borderWidth: 6,
+        borderWidth: 2,
         shadow: {
             enabled: true,
-            color: 'rgba(0,0,0,0.2)',
-            size: 20,
+            color: 'rgba(0,0,0,0.3)',
+            size: 10,
             x: 5,
             y: 5
+        },
+        margin: 12,
+        chosen: {
+            node: (values, id, selected, hovering) => {
+                if (hovering) {
+                    values.shadow.size = 15;
+                    values.borderWidth = 3;
+                }
+            }
         }
     },
     edges: {
-        width: 8,  // Much thicker edges
-        length: 500,  // Much longer edges
-        shadow: {
-            enabled: true,
-            color: 'rgba(0,0,0,0.2)',
-            size: 20
+        width: 3,
+        length: 200,
+        color: {
+            inherit: false,
+            color: '#60a5fa',
+            opacity: 0.8,
+            highlight: '#3b82f6',
+            hover: '#93c5fd'
         },
         arrows: {
             to: {
                 enabled: true,
-                scaleFactor: 3,  // Much larger arrows
+                scaleFactor: 1.2,
                 type: 'arrow'
             }
         },
         smooth: {
             type: 'curvedCW',
-            roundness: 0.3
+            roundness: 0.2
+        },
+        shadow: {
+            enabled: true,
+            color: 'rgba(0,0,0,0.2)',
+            size: 8,
+            x: 4,
+            y: 4
+        },
+        chosen: {
+            edge: (values, id, selected, hovering) => {
+                if (hovering) {
+                    values.width = 4;
+                    values.shadow.size = 12;
+                }
+            }
         }
     },
     physics: {
         enabled: true,
         barnesHut: {
-            gravitationalConstant: -15000,  // Extreme force
-            centralGravity: 0.05,  // Very low central gravity
-            springLength: 800,  // Very long springs
-            springConstant: 0.001,  // Very soft springs
-            damping: 0.09,
-            avoidOverlap: 1
+            gravitationalConstant: -2000,
+            centralGravity: 0.8,
+            springLength: 200,
+            springConstant: 0.08,
+            damping: 0.3,
+            avoidOverlap: 0.5
         },
         stabilization: {
             enabled: true,
-            iterations: 1000,
-            updateInterval: 50
+            iterations: 100,
+            updateInterval: 25
         }
     },
     interaction: {
@@ -143,10 +219,16 @@ const options = {
         multiselect: true,
         selectable: true,
         selectConnectedEdges: true,
-        navigationButtons: true,
+        navigationButtons: false,
         keyboard: true,
-        zoomSpeed: 0.5,  // Slower zoom for better control
+        zoomSpeed: 0.2,
         dragNodes: true
+    },
+    layout: {
+        improvedLayout: true,
+        hierarchical: {
+            enabled: false
+        }
     }
 };
 
@@ -167,67 +249,91 @@ function loadGraph() {
             const nodes = new vis.DataSet(data.nodes.map(node => ({
                 ...node,
                 shape: node.type === 'process' ? 'box' : 'circle',
-                size: node.type === 'process' ? 100 : 100,  // Match the options size
+                size: node.type === 'process' ? 45 : 40,
                 color: {
-                    background: node.type === 'process' ? '#4e73df' : '#1cc88a',
-                    border: node.type === 'process' ? '#2e59d9' : '#13855c',
+                    background: node.type === 'process' ? '#3b82f6' : '#10b981',
+                    border: node.type === 'process' ? '#2563eb' : '#059669',
                     highlight: { 
-                        background: node.type === 'process' ? '#2e59d9' : '#13855c',
-                        border: node.type === 'process' ? '#1e3d8f' : '#0f6848'
+                        background: node.type === 'process' ? '#60a5fa' : '#34d399',
+                        border: node.type === 'process' ? '#3b82f6' : '#10b981'
+                    },
+                    hover: {
+                        background: node.type === 'process' ? '#93c5fd' : '#6ee7b7',
+                        border: node.type === 'process' ? '#60a5fa' : '#34d399'
                     }
+                },
+                font: {
+                    size: 16,
+                    color: '#e2e8f0',
+                    face: 'system-ui, sans-serif',
+                    bold: true
+                },
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0,0,0,0.3)',
+                    size: 10,
+                    x: 5,
+                    y: 5
                 }
             })));
 
             const edges = new vis.DataSet(data.edges.map(edge => ({
                 ...edge,
-                width: 8,  // Match the options width
-                length: 500,  // Match the options length
                 color: {
-                    color: edge.type === 'allocation' ? '#e74a3b' : '#f6c23e',
-                    highlight: edge.type === 'allocation' ? '#c52e1a' : '#dda20a'
+                    color: edge.type === 'request' ? '#f59e0b' : '#60a5fa',
+                    highlight: edge.type === 'request' ? '#d97706' : '#3b82f6',
+                    hover: edge.type === 'request' ? '#fbbf24' : '#93c5fd'
                 }
             })));
 
             const container = document.getElementById('graph');
-            
-            if (network) {
-                network.setData({ nodes, edges });
-            } else {
-                network = new vis.Network(container, { nodes, edges }, options);
-                
-                network.on('stabilizationProgress', function(params) {
-                    console.log('Stabilization progress:', params.iterations / params.total * 100);
-                });
+            network = new vis.Network(container, { nodes, edges }, options);
 
-                network.on('stabilizationIterationsDone', function() {
-                    console.log('Stabilization finished');
-                    network.fit({
+            // Event listeners
+            network.on('hoverNode', () => {
+                network.canvas.body.container.style.cursor = 'pointer';
+                // network.canvas.body.container.style.height = '650px';
+            });
+
+            network.on('blurNode', () => {
+                network.canvas.body.container.style.cursor = 'default';
+            });
+            // network.on('hoverbody')
+
+            network.on('doubleClick', (params) => {
+                if (params.nodes.length > 0) {
+                    network.focus(params.nodes[0], {
+                        scale: 1.2,
                         animation: {
-                            duration: 1000,
+                            duration: 500,
                             easingFunction: 'easeInOutQuad'
                         }
                     });
-                });
-            }
+                }
+            });
+
+            // Button handlers
+            document.getElementById('resetBtn').onclick = () => network.setData({ nodes, edges });
+            document.getElementById('refreshBtn').onclick = () => loadGraph();
+            document.getElementById('zoomInBtn').onclick = () => network.zoom(1.2);
+            document.getElementById('zoomOutBtn').onclick = () => network.zoom(0.8);
+            document.getElementById('centerBtn').onclick = () => network.fit();
+            document.getElementById('fullscreenBtn').onclick = () => document.documentElement.requestFullscreen();
         })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        .catch(error => console.error('Error:', error));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadGraph();
-    
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        if (network) {
-            network.fit();
-        }
+// Initial load
+document.addEventListener('DOMContentLoaded', loadGraph);
+
+const body = document.querySelector('body');
+   
+
+    body.addEventListener('mouseenter', () => {
+        network.canvas.body.container.style.height = '650px';
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', loadGraph);
-});
-
-// Auto-refresh every 5 seconds
-setInterval(loadGraph, 5000);
+// Auto refresh every 5 seconds
+// setInterval(loadGraph, 10000);
 </script>
 {% endblock %} 

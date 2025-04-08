@@ -2,6 +2,9 @@
 
 A sophisticated web-based application for simulating and visualizing resource allocation in operating systems, featuring advanced deadlock detection and AI-powered analysis. This project provides an intuitive interface for understanding and managing resource allocation scenarios in computer systems.
 
+![Resource Allocation Graph Example](docs/images/rag-example.png)
+*Example of a resource allocation graph showing processes (circles), resources (squares), and their relationships. The red cycle indicates a potential deadlock situation.*
+
 ## Developer
 
 **Ankit Sharma**
@@ -53,6 +56,9 @@ A sophisticated web-based application for simulating and visualizing resource al
   - Drag-and-drop interaction
   - Zoom and pan controls
   - Real-time updates
+
+![Resource Allocation Visualization](docs/images/rag-visualization.png)
+*Interactive visualization interface showing resource allocation state with color-coded nodes and edges. The graph updates in real-time as allocations change.*
 
 - **Visual Elements**
   - Color-coded nodes for processes and resources

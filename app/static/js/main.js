@@ -22,16 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
-    // Auto-dismiss alerts after 5 seconds
-    document.querySelectorAll('.alert').forEach(function(alert) {
-        setTimeout(function() {
-            if (alert && alert.parentNode) {
-                alert.classList.add('fade');
-                setTimeout(() => alert.remove(), 150);
-            }
-        }, 5000);
-    });
-
     // Form validation and loading indicators
     document.querySelectorAll('form').forEach(function(form) {
         form.addEventListener('submit', function() {

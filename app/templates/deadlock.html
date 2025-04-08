@@ -1,142 +1,179 @@
 {% extends "base.html" %}
-{% block title %}Deadlock Detection - RAG Simulator{% endblock %}
+{% block title %}Deadlock Detection - Resource Allocation Graph Simulator{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container">
+    <!-- Deadlock Information Card -->
     <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="h2 mb-3"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Deadlock Detection</h1>
-            <p class="lead">Analysis of potential deadlocks in the resource allocation graph</p>
+        <div class="col-md-8">
+            <div class="card shadow-sm fade-in">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>What is a Deadlock?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>A deadlock is a situation where a set of processes are blocked because each process is holding a resource and waiting to acquire a resource held by another process.</p>
+                            
+                            <h6 class="mt-4 mb-3">Four Necessary Conditions for Deadlock:</h6>
+                            <ol>
+                                <li><strong>Mutual Exclusion:</strong> Resources cannot be shared simultaneously.</li>
+                                <li><strong>Hold and Wait:</strong> Processes hold resources while waiting for others.</li>
+                                <li><strong>No Preemption:</strong> Resources cannot be forcibly taken from processes.</li>
+                                <li><strong>Circular Wait:</strong> A circular chain of processes waiting for resources.</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <img src="{{ url_for('static', filename='img/deadlock_illustration.svg') }}" 
+                                 alt="Deadlock Illustration" 
+                                 class="img-fluid mb-3"
+                                 style="max-width: 100%;">
+                            <p class="text-center text-muted small">
+                                Illustration of a deadlock scenario where Process 1 holds Resource A and wants Resource B,
+                                while Process 2 holds Resource B and wants Resource A, creating a circular wait.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Analysis Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm fade-in">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-brain me-2"></i>AI Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if has_deadlock %}
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>High Risk
+                            </h6>
+                            <p class="mb-0">Current allocation patterns suggest this deadlock situation is likely to recur.</p>
+                        </div>
+                        
+                        <h6 class="mt-4 mb-3">Recommended Actions:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Implement resource ordering
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Add more resource instances
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Modify request algorithm
+                            </li>
+                        </ul>
+
+                        <div class="d-grid mt-4">
+                            <a href="{{ url_for('resource_optimization') }}" class="btn btn-warning">
+                                <i class="fas fa-lightbulb me-2"></i>View Optimization Suggestions
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Low Risk
+                            </h6>
+                            <p class="mb-0">Current allocation patterns suggest a low probability of deadlock.</p>
+                        </div>
+
+                        <h6 class="mt-4 mb-3">Preventive Measures:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-info me-2"></i>
+                                Monitor utilization patterns
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-info me-2"></i>
+                                Use resource timeouts
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-info me-2"></i>
+                                Implement avoidance algorithms
+                            </li>
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
+    <!-- Deadlock Detection Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm fade-in">
                 <div class="card-header {% if has_deadlock %}bg-danger{% else %}bg-success{% endif %} text-white">
-                    <h2 class="h5 mb-0">
-                        {% if has_deadlock %}
-                        <i class="fas fa-exclamation-circle me-2"></i>Deadlock Detected
-                        {% else %}
-                        <i class="fas fa-check-circle me-2"></i>No Deadlock Detected
-                        {% endif %}
-                    </h2>
+                    <h5 class="card-title mb-0">
+                        <i class="fas {% if has_deadlock %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %} me-2"></i>
+                        Deadlock Detection Results
+                    </h5>
                 </div>
                 <div class="card-body">
                     {% if has_deadlock %}
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Deadlock detected!</strong> The system has one or more cycles in the resource allocation graph, indicating a potential deadlock.
-                    </div>
-                    
-                    <h3 class="h5 mt-4 mb-3">Cycle Details:</h3>
-                    
-                    {% for cycle in deadlock_info.cycles %}
-                    <div class="card mb-3">
-                        <div class="card-header bg-light">
-                            <strong>Cycle {{ loop.index }}</strong>
-                        </div>
-                        <div class="card-body">
-                            <p>This cycle involves the following nodes and relationships:</p>
-                            <ul class="list-group">
-                                {% for link in cycle %}
-                                <li class="list-group-item">
-                                    <strong>{{ link.node }}</strong> 
-                                    <i class="fas fa-arrow-right mx-2"></i> 
-                                    {{ link.relation }} 
-                                    <i class="fas fa-arrow-right mx-2"></i>
-                                    <strong>{{ link.next_node }}</strong>
-                                </li>
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Deadlock Detected!</h6>
+                            <p>The system is currently in a deadlock state. The following processes are involved:</p>
+                            <ul>
+                                {% for process in deadlock_info.affected_processes %}
+                                    <li>{{ process }}</li>
                                 {% endfor %}
                             </ul>
+                            <hr>
+                            <p class="mb-0">Consider releasing some resources or terminating affected processes to resolve the deadlock.</p>
                         </div>
-                    </div>
-                    {% endfor %}
-                    
-                    <h3 class="h5 mt-4 mb-3">Potential Solutions:</h3>
-                    <ol>
-                        <li class="mb-2"><strong>Resource Preemption:</strong> Force a process to release its resources, breaking the cycle.</li>
-                        <li class="mb-2"><strong>Process Termination:</strong> Terminate one of the processes involved in the deadlock.</li>
-                        <li class="mb-2"><strong>Resource Reallocation:</strong> Change the allocation strategy to prevent the formation of cycles.</li>
-                        <li class="mb-2"><strong>Add More Resources:</strong> Increase the number of units available for the contested resources.</li>
-                    </ol>
-                    
+                        
+                        {% if deadlock_info.cycles %}
+                            <h6 class="mt-4 mb-3">Detected Cycles:</h6>
+                            <ul class="list-group">
+                                {% for cycle in deadlock_info.cycles %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-circle text-danger me-2"></i>
+                                        {{ ' → '.join(cycle) }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                     {% else %}
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>Good news!</strong> No deadlocks detected in the current resource allocation state.
-                    </div>
-                    <p>The system is currently in a safe state with no cycles in the resource allocation graph.</p>
+                        <div class="alert alert-success">
+                            <h6 class="alert-heading"><i class="fas fa-check-circle me-2"></i>No Deadlock Detected</h6>
+                            <p class="mb-0">The system is currently operating without any deadlocks.</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h2 class="h5 mb-0"><i class="fas fa-info-circle me-2"></i>What is a Deadlock?</h2>
-                </div>
-                <div class="card-body">
-                    <p>A deadlock is a situation where a set of processes are blocked because each process is holding a resource and waiting to acquire a resource held by another process.</p>
-                    
-                    <h3 class="h6 mt-3 mb-2">Four Necessary Conditions for Deadlock:</h3>
-                    <ol>
-                        <li><strong>Mutual Exclusion:</strong> Resources cannot be shared simultaneously.</li>
-                        <li><strong>Hold and Wait:</strong> Processes hold resources while waiting for others.</li>
-                        <li><strong>No Preemption:</strong> Resources cannot be forcibly taken from processes.</li>
-                        <li><strong>Circular Wait:</strong> A circular chain of processes waiting for resources.</li>
-                    </ol>
-                    
-                    <div class="text-center mt-3">
-                        <img src="{{ url_for('static', filename='images/deadlock-illustration.png') }}" class="img-fluid rounded" alt="Deadlock Illustration" style="max-width: 200px;">
-                        <p class="small text-muted mt-2">Illustration of a real-world deadlock scenario</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    <h2 class="h5 mb-0"><i class="fas fa-brain me-2"></i>AI Deadlock Analysis</h2>
-                </div>
-                <div class="card-body">
-                    <h3 class="h6 mb-3">Predictive Analysis</h3>
-                    
-                    {% if has_deadlock %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>High Risk:</strong> Current allocation patterns suggest this deadlock situation is likely to recur.
-                    </div>
-                    
-                    <p>The AI system recommends the following preventive measures:</p>
-                    <ul>
-                        <li>Implement resource ordering to prevent circular wait</li>
-                        <li>Consider adding more instances of the contested resources</li>
-                        <li>Modify the resource request algorithm to avoid potential deadlocks</li>
-                    </ul>
-                    
-                    <div class="d-grid gap-2 mt-3">
-                        <a href="{{ url_for('resource_optimization') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-lightbulb me-2"></i>See AI Optimization Suggestions
-                        </a>
-                    </div>
-                    
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Low Risk:</strong> Current allocation patterns suggest a low probability of deadlock.
-                    </div>
-                    
-                    <p>The AI system suggests these preventive measures to maintain safety:</p>
-                    <ul>
-                        <li>Continue monitoring resource utilization patterns</li>
-                        <li>Use resource acquisition timeouts where appropriate</li>
-                        <li>Consider implementing deadlock avoidance algorithms</li>
-                    </ul>
-                    {% endif %}
-                </div>
-            </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('graph') }}" class="btn btn-primary me-2">
+                <i class="fas fa-project-diagram me-2"></i>View Resource Graph
+            </a>
+            <button onclick="location.reload()" class="btn btn-secondary">
+                <i class="fas fa-sync-alt me-2"></i>Check Again
+            </button>
         </div>
     </div>
 </div>
+
+<style>
+.fade-in {
+    /* animation: fadeIn 0.5s ease-in; */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 {% endblock %} 

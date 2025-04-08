@@ -77,11 +77,11 @@
                                 </div>
                                 <p class="mb-1">{{ suggestion.message }}</p>
                                 <p class="mb-2 text-muted small">{{ suggestion.description }}</p>
-                                {% if suggestion.action %}
-                                <button class="btn btn-sm btn-outline-{{ suggestion.type }}">
-                                    <i class="fas fa-play me-1"></i>Apply
+                                <button class="btn btn-sm btn-outline-{{ suggestion.type }} apply-optimization"
+                                        data-action="{{ suggestion.action }}"
+                                        {% if suggestion.resource_id %}data-resource-id="{{ suggestion.resource_id }}"{% endif %}>
+                                    <i class="fas fa-check me-1"></i>Apply
                                 </button>
-                                {% endif %}
                             </div>
                             {% endfor %}
                         {% else %}
@@ -158,6 +158,18 @@
     {% endif %}
 </div>
 
+<!-- Toast for notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
 {% if recommendations and recommendations.trend_data %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -207,6 +219,61 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
         console.error('Error initializing chart:', error);
     }
+
+    // Initialize toast
+    const toastEl = document.getElementById('toast');
+    const toast = new bootstrap.Toast(toastEl);
+
+    // Handle optimization button clicks
+    document.querySelectorAll('.apply-optimization').forEach(button => {
+        button.addEventListener('click', async function() {
+            const action = this.dataset.action;
+            const resourceId = this.dataset.resourceId;
+            const button = this;
+
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Applying...';
+
+            try {
+                const response = await fetch('/api/apply_optimization', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...(resourceId && { resource_id: resourceId })
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    document.querySelector('.toast-body').textContent = data.message;
+                    document.querySelector('.toast-header').classList.remove('bg-danger');
+                    document.querySelector('.toast-header').classList.add('bg-success', 'text-white');
+                    toast.show();
+
+                    // Reload the page to show updated state
+                    setTimeout(() => window.location.reload(), 10000);
+                } else {
+                    throw new Error(data.message || 'Failed to apply optimization');
+                }
+            } catch (error) {
+                // Show error message
+                document.querySelector('.toast-body').textContent = error.message;
+                document.querySelector('.toast-header').classList.remove('bg-success');
+                document.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
+                toast.show();
+
+                // Reset button state
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Apply';
+            }
+        });
+    });
 });
 </script>
 {% endif %}

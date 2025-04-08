@@ -1,34 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Resource Allocation Graph Simulator{% endblock %}
+{% block title %}Home - Resource Allocation Graph Simulator{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12 text-center">
-        <h1 class="display-4 mb-3">Resource Allocation Graph Simulator</h1>
-        <p class="lead">An interactive tool for exploring resource allocation and deadlock detection in operating systems</p>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3 fade-in">Welcome to RAG Simulator</h1>
+            <p class="lead text-muted fade-in">
+                This simulator allows you to experiment with process resource
+                allocation, visualize resource allocation graphs, and detect
+                potential deadlocks in a system.
+            </p>
+        </div>
     </div>
-</div>
 
-<div class="row mb-5">
-    <div class="col-lg-10 offset-lg-1">
-        <div class="card shadow border-0">
-            <div class="card-body p-5">
-                <div class="row align-items-center">
-                    <div class="col-md-6 mb-4 mb-md-0">
-                        <h2 class="h3 mb-3">Welcome to RAG Simulator</h2>
-                        <p>This simulator allows you to experiment with process resource allocation, visualize resource allocation graphs, and detect potential deadlocks in a system.</p>
-                        <p>Start by creating resources, then add processes and allocate resources to explore the dynamics of resource management in operating systems.</p>
-                        <div class="d-grid gap-2 d-md-block mt-4">
-                            <a href="{{ url_for('resources') }}" class="btn btn-primary">
-                                <i class="fas fa-cube me-2"></i>Manage Resources
-                            </a>
-                            <a href="{{ url_for('processes') }}" class="btn btn-success">
-                                <i class="fas fa-microchip me-2"></i>Manage Processes
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-center">
-                        <img src="https://images.unsplash.com/photo-1639400200226-95739503acd1?auto=format&fit=crop&w=500&q=80" alt="Resource Allocation Visualization" class="img-fluid rounded">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm fade-in">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='img/resource_allocation.svg') }}" 
+                         alt="Resource Allocation Visualization" 
+                         class="img-fluid mb-4"
+                         style="max-width: 800px; width: 100%;">
+                    <p class="card-text">
+                        Start by creating resources, then add processes and allocate
+                        resources to explore the dynamics of resource management in
+                        operating systems.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('resources') }}" class="btn btn-primary">
+                            <i class="fas fa-cube me-2"></i>Manage Resources
+                        </a>
+                        <a href="{{ url_for('processes') }}" class="btn btn-success">
+                            <i class="fas fa-microchip me-2"></i>Manage Processes
+                        </a>
                     </div>
                 </div>
             </div>

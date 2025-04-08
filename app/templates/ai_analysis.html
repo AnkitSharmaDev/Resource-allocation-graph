@@ -24,6 +24,62 @@
         </div>
     </div>
 
+    <!-- Resource Usage Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Resource Usage Overview</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <img src="{{ url_for('static', filename='img/resource_allocation.svg') }}" 
+                         alt="Resource Allocation Diagram" 
+                         class="img-fluid mb-3"
+                         style="max-width: 100%; height: auto;">
+                </div>
+                <div class="col-md-6">
+                    <div class="overview-stats">
+                        <h6 class="text-muted mb-3">System Overview</h6>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Active Processes</h6>
+                                        <h3 class="mb-0">{{ analysis.active_processes }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Total Resources</h6>
+                                        <h3 class="mb-0">{{ analysis.total_resources }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Total Allocations</h6>
+                                        <h3 class="mb-0">{{ analysis.total_allocations }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Utilization</h6>
+                                        <h3 class="mb-0">{{ "%.1f"|format(analysis.average_utilization|float) }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if analysis and not analysis.get('error') %}
         <div class="row mb-4">
             <div class="col-md-12">

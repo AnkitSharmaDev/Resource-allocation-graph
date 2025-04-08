@@ -27,6 +27,13 @@ class Resource:
     def __post_init__(self):
         self.allocated_to = {}
         self.requested_by = {}
+        # Ensure available_units matches total_units initially
+        self.available_units = self.total_units
+        
+    def recalculate_available_units(self):
+        """Recalculate available units based on allocations"""
+        allocated = sum(self.allocated_to.values())
+        self.available_units = self.total_units - allocated
         
 @dataclass
 class Process:
@@ -105,8 +112,8 @@ class ResourceAllocationManager:
             raise ValueError(f"Not enough units available. Requested: {units}, Available: {resource.available_units}")
         
         # Update resource
-        resource.available_units -= units
         resource.allocated_to[process_id] = resource.allocated_to.get(process_id, 0) + units
+        resource.recalculate_available_units()  # Recalculate available units
         
         # Update process
         process.allocated_resources[resource_id] = process.allocated_resources.get(resource_id, 0) + units
@@ -165,8 +172,8 @@ class ResourceAllocationManager:
         units = process.allocated_resources[resource_id]
         
         # Update resource
-        resource.available_units += units
         del resource.allocated_to[process_id]
+        resource.recalculate_available_units()  # Recalculate available units
         
         # Update process
         del process.allocated_resources[resource_id]
@@ -335,6 +342,9 @@ class ResourceAllocationManager:
                     'resource_usage': {},
                     'total_allocations': 0,
                     'total_requests': 0,
+                    'active_processes': 0,
+                    'total_resources': 0,
+                    'average_utilization': 0.0,
                     'allocation_trend': {
                         'timestamps': [],
                         'allocations': []
@@ -346,10 +356,14 @@ class ResourceAllocationManager:
             resource_usage = {}
             total_allocations = 0
             total_requests = 0
+            total_utilization = 0.0
+            active_resources = 0
             
             for resource_id, resource in self.resources.items():
                 allocated_units = sum(resource.allocated_to.values())
                 usage_percentage = (allocated_units / resource.total_units) * 100 if resource.total_units > 0 else 0
+                total_utilization += usage_percentage
+                active_resources += 1
                 
                 # Calculate average allocation time for this resource
                 resource_history = [entry for entry in self.allocation_history 
@@ -384,6 +398,9 @@ class ResourceAllocationManager:
                 total_allocations += len(resource.allocated_to)
                 total_requests += len(resource.requested_by)
             
+            # Calculate average utilization across all resources
+            average_utilization = round(total_utilization / active_resources, 1) if active_resources > 0 else 0.0
+            
             # Generate trend data
             trend_data = self._generate_trend_data()
                     
@@ -391,6 +408,9 @@ class ResourceAllocationManager:
                 'resource_usage': resource_usage,
                 'total_allocations': total_allocations,
                 'total_requests': total_requests,
+                'active_processes': len(self.processes),
+                'total_resources': len(self.resources),
+                'average_utilization': average_utilization,
                 'allocation_trend': trend_data,
                 'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
@@ -401,6 +421,9 @@ class ResourceAllocationManager:
                 'resource_usage': {},
                 'total_allocations': 0,
                 'total_requests': 0,
+                'active_processes': 0,
+                'total_resources': 0,
+                'average_utilization': 0.0,
                 'allocation_trend': {
                     'timestamps': [],
                     'allocations': []
@@ -629,4 +652,5 @@ class ResourceAllocationManager:
         resource = self.get_resource(resource_id)
         if not resource:
             return False
-        return resource.total_units != resource.available_units 
+        # Check if any process has allocated units of this resource
+        return bool(resource.allocated_to)  # Returns True if allocated_to dict is not empty 

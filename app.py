@@ -318,6 +318,92 @@ def delete_resource(resource_id):
         flash(f'Error deleting resource: {str(e)}', 'error')
     return redirect(url_for('resources'))
 
+@app.route('/api/apply_optimization', methods=['POST'])
+def api_apply_optimization():
+    """API endpoint to apply optimization recommendations."""
+    try:
+        data = request.get_json()
+        action = data.get('action')
+        
+        if not action:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameter: action'
+            }), 400
+            
+        # Handle deadlock resolution
+        if action == 'resolve_deadlock':
+            # Get deadlock info
+            deadlock_info = resource_manager.detect_deadlock()
+            if deadlock_info['has_deadlock']:
+                # Release resources from affected processes to break deadlock
+                for process_id in deadlock_info['affected_processes']:
+                    process = resource_manager.processes.get(process_id)
+                    if process:
+                        # Release all resources held by this process
+                        for resource_id in list(process.allocated_resources.keys()):
+                            resource_manager.release_resource(process_id, resource_id)
+                return jsonify({
+                    'success': True,
+                    'message': 'Deadlock resolved by releasing resources from affected processes'
+                })
+            return jsonify({
+                'success': False,
+                'message': 'No deadlock detected'
+            })
+            
+        # Handle resource-specific actions
+        resource_id = data.get('resource_id')
+        if not resource_id and action not in ['resolve_deadlock']:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameter: resource_id'
+            }), 400
+            
+        resource = resource_manager.get_resource(resource_id)
+        if not resource and action not in ['resolve_deadlock']:
+            return jsonify({
+                'success': False,
+                'message': 'Resource not found'
+            }), 404
+            
+        if action == 'decrease_units':
+            # Decrease units if utilization is low
+            if resource.total_units > 1:
+                resource.total_units -= 1
+                resource.recalculate_available_units()
+                message = f'Reduced {resource.name} units by 1'
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Cannot reduce units below 1'
+                }), 400
+        elif action == 'increase_units':
+            # Increase units if utilization is high
+            resource.total_units += 1
+            resource.recalculate_available_units()
+            message = f'Increased {resource.name} units by 1'
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid action'
+            }), 400
+            
+        # Get updated recommendations
+        recommendations = resource_manager.get_optimization_recommendations()
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'recommendations': recommendations
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Add some sample data for testing
     resource_manager.add_resource("CPU", 4)
